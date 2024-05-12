@@ -10,32 +10,32 @@ import Footer from "./components/Footer";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes,Route} from "react-router-dom";
 import BarberDetails from "./pages/BarberDetails";
+import Login from "./pages/Login";
 
 function App() {
   return (
     <AuthProvider>
-      <div className="app">
+    <div className="app">
       <BrowserRouter>
         <Header/>
         <div className="content">
           <Routes>
-            <Route path='/barber/:id' element={<BarberDetails/>}/>
+            <Route path='/barber/:barberId' element={<BarberDetails />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
           <HeroSection/>
           <Categories/>
           <Campaigns/>
         </div>
       </BrowserRouter>
-      
       <div className="container mx-auto grid gap-y-6">
-      <Favorites/>
-      <MobileApp/>
-      <Cards/>
+        <Favorites/>
+        <MobileApp/>
+        <Cards/>
       </div>
-     
       <Footer/>
-      </div>
-    </AuthProvider>
+    </div>
+  </AuthProvider>
   );
 }
 
