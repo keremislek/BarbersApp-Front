@@ -13,7 +13,8 @@ export default function Header() {
         <nav className='flex gap-x-8 text-sm font-semibold'>
             <a href='#' className='flex items-center gap-2 text-white transition-all hover:text-opacity-100 text-opacity-80'><BiGlobe size={20}/>TÜRKÇE (TR)</a>
             <Link to='/login' className='flex items-center gap-2 text-white transition-all hover:text-opacity-100 text-opacity-80'><FiLogIn size={20}/> Giriş Yap</Link>
-            <a href='#' className='flex items-center gap-2 text-white transition-all hover:text-opacity-100 text-opacity-80'><CgUserAdd size={20}/>Kayıt Ol</a>
+            <Link to='/signup' className='flex items-center gap-2 text-white transition-all hover:text-opacity-100 text-opacity-80' ><CgUserAdd size={20}/>Kayıt ol</Link>
+            
         </nav>
 
         </div>

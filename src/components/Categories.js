@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import API from "../api/axios";
 import { Link } from "react-router-dom";
+import API from "../api/axios";
 
 const Categories = () => {
   const [barbers, setBarbers] = useState([]);
@@ -29,6 +29,7 @@ const Categories = () => {
     }
     return stars;
   };
+  
 
   return (
     <div className="bg-white">
@@ -53,7 +54,7 @@ const Categories = () => {
                       className="underline hover:text-gray-900 focus:text-gray-400"
                     >
                       {barber.barberName}
-                    </Link>{" "}
+                    </Link>
                     
                   </h3>
                   <p className="mt-1 text-sm text-gray-900">{barber.barberAddress}</p>

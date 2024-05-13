@@ -11,6 +11,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes,Route} from "react-router-dom";
 import BarberDetails from "./pages/BarberDetails";
 import Login from "./pages/Login";
+import BarberDistrictList from "./pages/BarberDistrictList";
+import Signup from "./pages/Signup";
+import BarberHome from "./pages/BarberHome";
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
           <Routes>
             <Route path='/barber/:barberId' element={<BarberDetails />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/district/:districtId" element={<BarberDistrictList/>}/>
+            <Route path="/signup" element={<Signup/>} />
+            <Route path="/barberHome" element={<BarberHome/>}/>
           </Routes>
           <HeroSection/>
           <Categories/>
