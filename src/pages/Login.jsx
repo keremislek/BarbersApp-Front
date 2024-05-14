@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { jwtDecode } from "jwt-decode";
 
@@ -44,6 +44,7 @@ const Login = () => {
       const decoded = jwtDecode(tokenString);
       const firstRole = decoded.role[0].authority;
       const decodedEmail = decoded.sub;
+
 
       if (firstRole === "Customer") {
         navigate("/");

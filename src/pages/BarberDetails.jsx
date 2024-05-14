@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import API from '../api/axios';
 
 const BarberDetails = () => {
-  const barberId = useParams(); 
+  const {barberId} = useParams(); 
 
   const [barbers, setBarbers] = useState([]);
   const [servicesInfo, setServicesInfo] = useState([]);
@@ -12,13 +12,13 @@ const BarberDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const barberResponse = await API.get(`/barbers/1`);
+        const barberResponse = await API.get(`/barbers/${barberId}`);
         setBarbers(barberResponse.data);
         
-        const servicesResponse = await API.get(`/servicesInfo/barber/1`);
+        const servicesResponse = await API.get(`/servicesInfo/barber/${barberId}`);
         setServicesInfo(servicesResponse.data);
 
-        const availableResponse = await API.get(`/appointments/available/1`);
+        const availableResponse = await API.get(`/appointments/available/${barberId}`);
         setAvailableHours(availableResponse.data);
       } catch (error) {
         console.error("Fetch Data Error: ", error.response ? error.response.data : error.message);

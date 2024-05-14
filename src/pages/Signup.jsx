@@ -26,7 +26,6 @@ const Signup = () => {
         password: '',
         firstName: '',
         lastName: '',
-        address: '',
         barberName: '',
         photo: null,
     });
@@ -54,7 +53,6 @@ const Signup = () => {
                 email: formData.email,
                 password: formData.password,
                 barberName: formData.barberName,
-                address: formData.address,
                 photoUrl: photoURL // Send photo URL to API
             });
             console.log(response);
@@ -65,51 +63,51 @@ const Signup = () => {
     }
 
     return (
-        <div className="container mx-auto">
-            <div className="header text-center">
+        <div className="bg-white">
+            <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 top-0">
+            <div className="">
                 <div className="text">{action}</div>
-                <div className="underline"></div>
+                <div className="text-lg font-bold mb-4 mx-auto">Kayıt Ol</div>
+                <div class="border-b-2 border-purple-500 mb-4"></div>
             </div>
             <div className="inputs flex flex-col items-center">
                 {/* Form inputs */}
                 {action === "Customer" && (
                     <>
-                        <div className="inputs">
+                        <div className="inputs h-10 border-2 border-gray-200 rounded-lg mb-4 w-full lg:w-1/2 transition-colors hover:border-purple-500 outline-none">
                             <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="First Name" className="input" />
                         </div>
-                        <div className="inputs">
+                        <div className="inputs h-10 border-2 border-gray-200 rounded-lg mb-4 w-full lg:w-1/2 transition-colors hover:border-purple-500 outline-none">
                             <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Surname" className="input" />
                         </div>
                     </>
                 )}
                 {action === "Barber" && (
                     <>
-                        <div className="inputs">
+                        <div className="inputs h-10 border-2 border-gray-200 rounded-lg mb-4 w-full lg:w-1/2 transition-colors hover:border-purple-500 outline-none">
                             <input type="text" name="barberName" value={formData.barberName} onChange={handleChange} placeholder="Barber Name" className="input" />
-                        </div>
-                        <div className="inputs">
-                            <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Barber Address" className="input" />
                         </div>
                     </>
                 )}
-                <div className="inputs">
+                <div className="inputs h-10 border-2 border-gray-200 rounded-lg mb-4 w-full lg:w-1/2 transition-colors hover:border-purple-500 outline-none">
                     <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input" />
                 </div>
-                <div className="inputs">
+                <div className="inputs h-10 border-2 border-gray-200 rounded-lg mb-4 w-full lg:w-1/2 transition-colors hover:border-purple-500 outline-none">
                     <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" className="input" />
                 </div>
                 {/* File input for photo upload */}
                 {action === "Barber" && (
-                    <div className="inputs">
+                    <div className="inputs mb-4 w-full lg:w-1/2">
                         <input type="file" name="photo" onChange={handleChange} accept="image/*" className="input" />
                     </div>
                 )}
                 {/* Submit button */}
-                <div className="submit-container flex justify-around mt-4">
-                    <div className={action === "Barber" ? "submit gray" : "submit"} onClick={() => setAction("Customer")}>Customer</div>
+                <div className="submit-container flex justify-around">
+                    <div className={action === "Barber" ? "submit gray" : "submit"}  onClick={() => setAction("Customer")}>Customer</div>
                     <div className={action === "Customer" ? "submit gray" : "submit"} onClick={() => setAction("Barber")}>Barber</div>
                     <button className="submit bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleSubmit}>Submit</button>
                 </div>
+            </div>
             </div>
         </div>
     );

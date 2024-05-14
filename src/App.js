@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import BarberDistrictList from "./pages/BarberDistrictList";
 import Signup from "./pages/Signup";
 import BarberHome from "./pages/BarberHome";
+import Home from "./pages/Home";
 
 function App() {
   return (
@@ -23,22 +24,18 @@ function App() {
         <Header/>
         <div className="content">
           <Routes>
+            <Route path="/" element={<Home/>} />
+            <Route path="/home" element={<Home/>} />
+
             <Route path='/barber/:barberId' element={<BarberDetails />} />
             <Route path="/login" element={<Login />} />
             <Route path="/district/:districtId" element={<BarberDistrictList/>}/>
             <Route path="/signup" element={<Signup/>} />
             <Route path="/barberHome" element={<BarberHome/>}/>
           </Routes>
-          <HeroSection/>
-          <Categories/>
-          <Campaigns/>
         </div>
       </BrowserRouter>
-      <div className="container mx-auto grid gap-y-6">
-        <Favorites/>
-        <MobileApp/>
-        <Cards/>
-      </div>
+      
       <Footer/>
     </div>
   </AuthProvider>

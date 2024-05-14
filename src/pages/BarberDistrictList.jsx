@@ -5,12 +5,13 @@ import { Link, useParams } from "react-router-dom";
 export default function BarberDistrictList() {
     
     const [barbers, setBarbers] = useState([]);
-    const districtId=useParams();
+    const {districtId}=useParams();
+    
 
     useEffect(() => {
       const fetchData = async () => {
         try {
-          const response = await API.get(`appointments/13`);
+          const response = await API.get(`appointments/${districtId}`);
           setBarbers(response.data);
         } catch (error) {
           console.error('Fetch Data Error:', error.response ? error.response.data : error.message);
