@@ -100,9 +100,10 @@ export default function HeroSection() {
                 </div>
                 <div className=' absolute top-1/2 right-10 transform -translate-y-1/2  w-[400px] h-[400px] rounded-lg bg-gray-50 p-6'>
                     <Calendar />
-                    <h4 className='text-primary-brand-color text-center font-semibold mb-4'>Giriş yap veya kayıt ol</h4>
-                    <div className='grid gpa-y-4'>
-                        <div className='flex gap-x-2'>
+                    
+                    <div className='grid gpa-y-8 gap-x-2'>
+                        
+                        <div className='flex gap-x-2 top-2'>
                             <ReactFlagsSelect
                                 countries={Object.keys(phones)}
                                 customLabels={phones}

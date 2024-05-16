@@ -2,24 +2,151 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import API from '../api/axios';
 
+const CommentModal = ({ comments, onClose, barberId }) => {
+  const [newComment, setNewComment] = useState('');
+  const customId = localStorage.getItem('id');
+
+  const handleCommentChange = (event) => {
+    setNewComment(event.target.value);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+
+      await API.post('/comments', {
+        customerId: customId,
+        barberId: barberId,
+        text: newComment
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Yorum eklenirken bir hata oluştu:', error);
+    }
+  };
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await API.delete(`/comments/${commentId}`);
+    } catch (error) {
+      console.error('Yorum silinirken bir hata oluştu:', error);
+    }
+  };
+  return (
+    <div className="fixed z-10 inset-0 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="sm:flex sm:items-start">
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Yorumlar</h3>
+                <div className="mt-2">
+                  {comments.map((comment, index) => (
+                    <div key={index} className="border-b border-gray-200 mb-4 pb-4">
+                       {comment.customerId === customId && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.commentId)}
+                          className="text-sm text-green-500 hover:text-green-700"
+                        >
+                          Sil
+                        </button>
+                      )}
+                      <p className="text-sm text-gray-500 mb-2">
+                        <span className="font-semibold">Müşteri:</span> {comment.customerName.toUpperCase().substring(0,2)}{comment.customerName.toUpperCase().substring(0,2).replace(/./g,'*')}
+                        {comment.customerId === customId && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.commentId)}
+                          className="text-sm text-green-500 hover:text-green-700"
+                        >
+                          Sil
+                        </button>
+                      )}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-2">
+                        <span className="font-semibold">Yorum:</span> {comment.text}
+                        {comment.customerId === customId && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.commentId)}
+                          className="text-sm text-red-500 hover:text-red-700"
+                        >
+                          Sil
+                        </button>
+                      )}
+                      </p>
+                      {comment.customerId === customId && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.commentId)}
+                          className="text-sm text-red-500 hover:text-red-700"
+                        >
+                          Sil
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <form onSubmit={handleSubmit} className="mt-4">
+                  <textarea
+                    value={newComment}
+                    onChange={handleCommentChange}
+                    className="w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    rows="3"
+                    placeholder="Yorumunuzu buraya yazın..."
+                  ></textarea>
+                  <button
+                    type="submit"
+                    className="mt-2 inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-pink-600 text-base font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:text-sm"
+                  >
+                    Yorum Ekle
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button onClick={onClose} type="button" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-pink-600 text-base font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:ml-3 sm:w-auto sm:text-sm">
+              Kapat
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BarberDetails = () => {
-  const {barberId} = useParams(); 
+  const [rating, setRating] = useState(0); 
+  const [isRated, setIsRated] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const { barberId } = useParams();
 
   const [barbers, setBarbers] = useState([]);
   const [servicesInfo, setServicesInfo] = useState([]);
   const [availableHours, setAvailableHours] = useState([]);
+  const [comments, setComments] = useState([]);
+
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const barberResponse = await API.get(`/barbers/${barberId}`);
         setBarbers(barberResponse.data);
-        
+
         const servicesResponse = await API.get(`/servicesInfo/barber/${barberId}`);
         setServicesInfo(servicesResponse.data);
 
         const availableResponse = await API.get(`/appointments/available/${barberId}`);
         setAvailableHours(availableResponse.data);
+
+        const commentResponse = await API.get(`/comments/barber/${barberId}`)
+        setComments(commentResponse.data)
+
       } catch (error) {
         console.error("Fetch Data Error: ", error.response ? error.response.data : error.message);
       }
@@ -44,7 +171,59 @@ const BarberDetails = () => {
     }
   };
 
+  const openModal = () => {
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  const handleStarClick = async (rate) => {
+    // Kullanıcı zaten puan vermişse işlem yapma
+    if (isRated) return;
+
+    try {
+      // Backend'e puan verme isteği gönder
+      await API.post("/ratings/create", {
+        rate: rate,
+        customerId: localStorage.getItem("id"),
+        barberId: barberId,
+      });
+      // Puanlama başarılıysa puanı ayarla ve kullanıcının zaten puan verdiğini işaretle
+      setRating(rate);
+      setIsRated(true);
+    } catch (error) {
+      console.error("Rating Error: ", error.response ? error.response.data : error.message);
+    }
+  };
+
+  // Yıldız simgeleri için JSX oluştur
+  const renderStars = () => {
+    const stars = [];
+    // Toplam 5 yıldız var
+    for (let i = 1; i <= 5; i++) {
+      // Her yıldızı oluştururken tıklanabilir olup olmadığını kontrol et
+      const clickable = !isRated;
+      // Tıklanabilirse, handleStarClick fonksiyonunu puanla ve parametre olarak yıldızın sırasını gönder
+      stars.push(
+        <span
+          key={i}
+          className={`text-2xl cursor-pointer ${clickable ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400'}`}
+          onClick={() => clickable && handleStarClick(i)}
+        >
+          {rating >= i ? '★' : '☆'}
+        </span>
+      );
+    }
+    return stars;
+  };
+
+
+
+
   return (
+
     <div className="font-sans">
       <div className="container mx-auto py-8">
         <div className="grid items-start grid-cols-1 lg:grid-cols-2 gap-10 ">
@@ -58,6 +237,12 @@ const BarberDetails = () => {
                 </svg>
                 {barbers.rate}
               </button>
+              <div>
+      <div className="flex items-center space-x-1">
+        <p className="text-gray-600">Puanınızı Verin:</p>
+        {renderStars()}
+      </div>
+    </div>
               <button type="button" className="px-2.5 py-1.5 bg-gray-100 text-xs text-gray-800 rounded-md flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 mr-1" fill="currentColor" viewBox="0 0 32 32">
                   <path d="M14.236 21.954h-3.6c-.91 0-1.65-.74-1.65-1.65v-7.201c0-.91.74-1.65 1.65-1.65h3.6a.75.75 0 0 1 .75.75v9.001a.75.75 0 0 1-.75.75zm-3.6-9.001a.15.15 0 0 0-.15.15v7.2a.15.15 0 0 0 .15.151h2.85v-7.501z" data-original="#000000" />
@@ -66,6 +251,10 @@ const BarberDetails = () => {
                 </svg>
                 {barbers.commentSize}
               </button>
+              <button type="button" onClick={openModal} className="px-2.5 py-1.5 bg-gray-100 text-xs text-gray-800 rounded-md flex items-center">
+                Yorumları Gör
+              </button>
+              {showModal && <CommentModal comments={comments} onClose={closeModal} barberId={barberId} />}
             </div>
             <div className="ml-left">
               <p className="mr-0">{barbers.address}</p>
@@ -75,8 +264,8 @@ const BarberDetails = () => {
           <div className="ml-auto">
             <div className="flex flex-wrap items-start gap-0">
               <div className="ml-left gap-4">
-                <h2 className="text-2xl font-extrabold text-gray-800">Adjective Attire | T-shirt</h2>
-                <p className="text-sm text-gray-400 mt-2">Well-Versed Commerce</p>
+                <h2 className="text-2xl font-extrabold text-gray-800">Berber Sayfası</h2>
+                <p className="text-sm text-gray-400 mt-2">en iyi berberler hizmetinizde</p>
               </div>
               <div className="flex flex-wrap gap-4 ml-auto">
                 <button type="button" className="px-2.5 py-1.5 bg-pink-100 text-xs text-pink-600 rounded-md flex items-center">

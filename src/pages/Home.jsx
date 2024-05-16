@@ -13,6 +13,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
+  const id = localStorage.getItem("id");
 
     if (!token) {
       console.error("Token bulunamadı");

@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     token: localStorage.getItem('token'),
     isAuthenticated: !!localStorage.getItem('token'),
+    id: localStorage.getItem('id'),
   });
 
   const login = async (email, password) => {
@@ -19,11 +20,14 @@ export const AuthProvider = ({ children }) => {
           password,
         });
         const { token } = response.data;
+        const { id } = response.data;
         if (token) {
           localStorage.setItem('token', token);
+          localStorage.setItem('id', id);
           setAuthState({
             token,
             isAuthenticated: true,
+            id
           });
           return true;
         }
@@ -35,9 +39,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('id');
     setAuthState({
       token: null,
       isAuthenticated: false,
+      id:null,
     });
   };
 

@@ -20,6 +20,8 @@ module.exports = {
       color:['before']
     },
   },
-  plugins: [],
+  plugins: [
+    require('flowbite/plugin')
+  ],
 }
 
