@@ -1,40 +1,92 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Slider from "react-slick";
-import ReactFlagsSelect from 'react-flags-select';
-import { FaFacebook } from 'react-icons/fa';
 import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import API from '../api/axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import debounce from 'lodash.debounce';
+
+
 
 
 export default function HeroSection() {
-
-    const navigate=useNavigate();
+    const navigate = useNavigate();
     const [selected, setSelected] = useState('TR');
     const [districts, setDistricts] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await API.get('/address/districts')
-                setDistricts(response.data)
+                const response = await API.get('/address/districts');
+                setDistricts(response.data);
             } catch (error) {
                 console.error('Fetch Data Error:', error.response ? error.response.data : error.message);
             }
-        }
+        };
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (searchTerm.trim() !== '') {
+            debouncedSearch(searchTerm);
+        } else {
+            setSearchResults([]);
+        }
+    }, [searchTerm]);
+
+    const handleSearch = async (term) => {
+        if (term.trim() === '') {
+            setSearchResults([]);
+            return;
+        }
+        try {
+            const response = await API.get('/barbers/search', {
+                params: { name: term }
+            });
+            setSearchResults(response.data);
+        } catch (error) {
+            console.error('Search Error:', error.response ? error.response.data : error.message);
+        }
+    };
+
+    const handleSearchDate = async (selectedDate) => {
+        try {
+          const dateResponse = await API.get('/appointments/date', {
+            params: { date: selectedDate.toISOString().split('T')[0] } 
+          });
+          console.log(dateResponse.data); 
+        } catch (error) {
+          console.error('Error fetching available times:', error);
+        }
+        navigate(`/barber/date/${selectedDate}`);
+      };
+
+    const debouncedSearch = debounce((term) => {
+        handleSearch(term);
+    }, 300); // 300ms debounce delay
 
     const handleDistrictSelection = (districtId) => {
         navigate(`/district/${districtId}`);
     };
 
+    const handleClickBarber = (barberId) => {
+        navigate(`/barber/${barberId}`);
+    }
+
     const phones = {
         US: '+1',
         GB: '+75',
         TR: '+90'
-    }
+    };
+    const handleDateChange = date => {
+        setSelectedDate(date);
+        console.log(selectedDate)
+
+    };
 
     var settings = {
         dots: false,
@@ -65,10 +117,12 @@ export default function HeroSection() {
                     <img src='https://cdn.logojoy.com/wp-content/uploads/2018/05/30161127/651.png' className="h-32 w-32" alt="logo" />
                     <h3 className='text-white font-extrabold'>Yakışıklanmak için <br />Bizi Seçin</h3>
                 </div>
-                <div className='flex items-center absolute top-10 left-1/2 -translate-x-1/2'>
+                <div className='flex items-center absolute top-9 left-1/2 -translate-x-1/2'>
                     <input
                         type="text"
-                        placeholder="Arama yap..."
+                        placeholder="Berber ara..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="h-10 px-4 border-2 border-gray-200 rounded-lg mr-2 transition-colors hover:border-purple-500 outline-none"
                     />
                     <div className="relative">
@@ -98,39 +152,45 @@ export default function HeroSection() {
                         </div>
                     </div>
                 </div>
-                <div className=' absolute top-1/2 right-10 transform -translate-y-1/2  w-[400px] h-[400px] rounded-lg bg-gray-50 p-6'>
-                    <Calendar />
-                    
-                    <div className='grid gpa-y-8 gap-x-2'>
-                        
-                        <div className='flex gap-x-2 top-2'>
-                            <ReactFlagsSelect
-                                countries={Object.keys(phones)}
-                                customLabels={phones}
-                                placeholder="Select Language"
-                                onSelect={code => setSelected(code)}
-                                selected={selected}
-                                className='flag-select'
-                            />
-                            <label className='flex relative block'>
-                                <input className='h-14 px-4 border-2 border-gray-200 rounded-lg w-full transition-colors hover:border-purple-500 outline-none peer' />
-                                <span className='absolute top-0 left-0 bottom-0 right-0 flex-item-center justify-center px-4 text-sm text-gray-700 peer-focus:h-1 transition-all'>
-
-                                </span>
-                            </label>
+                {searchTerm.trim() !== '' && (
+                    <div className="flex absolute top-20 left-1/2 transform -translate-x-1/2 max-w-md">
+                        <div className="bg-white rounded-lg shadow-lg p-4">
+                            <h3 className="text-sm font-bold mb-2">Arama Sonuçları:</h3>
+                            <ul className="text-sm">
+                                {searchResults.length > 0 ? (
+                                    searchResults.map((barber) => (
+                                        <li key={barber.id} className="border-b last:border-0 py-2 cursor-pointer hover:text-blue-500" onClick={() => handleClickBarber(barber.id)}>
+                                            {barber.barberName}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="text-gray-500 py-2">Sonuç bulunamadı.</li>
+                                )}
+                            </ul>
                         </div>
-                        <button className='bg-brand-yellow text-primary-brand-color transition-colors hover:bg-primary-brand-color hover:text-brand-yellow h-12 flex items-center justify-center rounded w-full text-sm font-semibold  '>
-                            Telefon Numarası İle Devam Et
-                        </button>
-                        <hr className='h-[1px] bg-gray-300 my-2' />
-                        <button className='bg-blue-900 bg-opacity-10 text-blue-700 transition-colors hover:bg-blue-700 hover:text-white h-12 flex items-center rounded w-full text-sm font-semibold  '>
-                            <FaFacebook size={24} />
-                            <span className='mx-auto'> Facebook ile Devam Et </span>
-                        </button>
                     </div>
-                </div>
-            </div>
+                )}
+                <div className='mx-auto bg-slate-200 absolute top-16 right-1'>
+  <div className="mx-auto max-w-md p-4 flex flex-col items-center">
+    <h1 className="text-xl font-bold mb-4">Randevu Tarihi Seçin</h1>
+    <Calendar
+      onChange={handleDateChange}
+      value={selectedDate}
+      className="rounded-lg shadow-md"
+    />
+    <div className="flex items-center mt-4">
+      <p className="text-black mr-4">Seçilen Tarih: {selectedDate.toLocaleDateString()}</p>
+      <button
+        onClick={handleSearchDate}
+        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+      >
+        Ara
+      </button>
+    </div>
+  </div>
+</div>
 
+            </div>
         </div>
-    )
+    );
 }

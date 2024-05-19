@@ -7,13 +7,28 @@ import Campaigns from '../components/Campaigns';
 import Favorites from '../components/Favorites';
 import MobileApp from '../components/MobileApp';
 import Cards from '../components/Cards';
+import { useAuth } from '../context/AuthContext';
 
 
 export default function Home() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const token = localStorage.getItem("token");
   const id = localStorage.getItem("id");
+
+  if (!isAuthenticated) {
+    return (<div>
+      <HeroSection/>
+      <Categories/>
+      <Campaigns/>
+        <div className="container mx-auto grid gap-y-6">
+          <Favorites/>
+          <MobileApp/>
+          <Cards/>
+        </div>
+      </div>);
+  }
 
     if (!token) {
       console.error("Token bulunamadı");

@@ -61,7 +61,7 @@ const Categories = () => {
                   <p className="mt-1 text-sm text-gray-500">
                     {renderStars(Math.round(barber.rate))}
                     <span style={{ marginLeft: "8px" }}>Yorumlar</span>
-                    ({barber.commentSize}){" "}
+                    ({barber.commentSize || 0}){" "}
                   </p>
                 </div>
                 <p className="text-sm font-medium text-gray-900"></p>

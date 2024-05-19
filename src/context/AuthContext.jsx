@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated: false,
       id:null,
     });
+    return true;
   };
 
   return (

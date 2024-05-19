@@ -46,10 +46,17 @@ const CommentModal = ({ comments, onClose, barberId }) => {
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">Yorumlar</h3>
+                <div className=" px-2 py-0 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button onClick={onClose} type="button" className="relative top-0 right-0 -mr-3 -mt-3 w-8 h-8 inline-flex justify-center rounded-full bg-white border border-gray-300 shadow-sm px-0.5 py-0.5 text-base font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
                 <div className="mt-2">
                   {comments.map((comment, index) => (
                     <div key={index} className="border-b border-gray-200 mb-4 pb-4">
-                       {comment.customerId === customId && (
+                      {comment.customerId === customId && (
                         <button
                           onClick={() => handleDeleteComment(comment.commentId)}
                           className="text-sm text-green-500 hover:text-green-700"
@@ -58,26 +65,26 @@ const CommentModal = ({ comments, onClose, barberId }) => {
                         </button>
                       )}
                       <p className="text-sm text-gray-500 mb-2">
-                        <span className="font-semibold">Müşteri:</span> {comment.customerName.toUpperCase().substring(0,2)}{comment.customerName.toUpperCase().substring(0,2).replace(/./g,'*')}
+                        <span className="font-semibold">Müşteri:</span> {comment.customerName.toUpperCase().substring(0, 2)}{comment.customerName.toUpperCase().substring(0, 2).replace(/./g, '*')}
                         {comment.customerId === customId && (
-                        <button
-                          onClick={() => handleDeleteComment(comment.commentId)}
-                          className="text-sm text-green-500 hover:text-green-700"
-                        >
-                          Sil
-                        </button>
-                      )}
+                          <button
+                            onClick={() => handleDeleteComment(comment.commentId)}
+                            className="text-sm text-green-500 hover:text-green-700"
+                          >
+                            Sil
+                          </button>
+                        )}
                       </p>
                       <p className="text-sm text-gray-500 mb-2">
                         <span className="font-semibold">Yorum:</span> {comment.text}
                         {comment.customerId === customId && (
-                        <button
-                          onClick={() => handleDeleteComment(comment.commentId)}
-                          className="text-sm text-red-500 hover:text-red-700"
-                        >
-                          Sil
-                        </button>
-                      )}
+                          <button
+                            onClick={() => handleDeleteComment(comment.commentId)}
+                            className="text-sm text-red-500 hover:text-red-700"
+                          >
+                            Sil
+                          </button>
+                        )}
                       </p>
                       {comment.customerId === customId && (
                         <button
@@ -108,11 +115,11 @@ const CommentModal = ({ comments, onClose, barberId }) => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button onClick={onClose} type="button" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-pink-600 text-base font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:ml-3 sm:w-auto sm:text-sm">
-              Kapat
-            </button>
-          </div>
+       
+
+
+
+
         </div>
       </div>
     </div>
@@ -120,7 +127,7 @@ const CommentModal = ({ comments, onClose, barberId }) => {
 };
 
 const BarberDetails = () => {
-  const [rating, setRating] = useState(0); 
+  const [rating, setRating] = useState(0);
   const [isRated, setIsRated] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { barberId } = useParams();
@@ -129,6 +136,36 @@ const BarberDetails = () => {
   const [servicesInfo, setServicesInfo] = useState([]);
   const [availableHours, setAvailableHours] = useState([]);
   const [comments, setComments] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const [formData, setFormData] = useState({
+    serviceIds: [],
+    availableHours: Array(12).fill().map((_, index) => availableHours[`t${index + 1}`] === 'T' ? 'T' : 'F'),
+    date: new Date(),
+    userId: null
+  });
+
+
+const handleAddToCart = (service) => {
+  // Daha önce sepete eklenmemişse hizmeti sepete ekle
+  if (!cart.find(item => item.id === service.id)) {
+    setCart(prevCart => [...prevCart, service]);
+    setFormData(prevState=>({
+      ...prevState,
+      serviceIds:[...prevState.serviceIds,service.id]
+    }))
+  }
+};
+const handleRemoveFromCart = (serviceId) => {
+  // Sepetten hizmeti çıkar
+  setCart(prevCart => prevCart.filter(item => item.id !== serviceId));
+  setFormData(prevState => ({
+    ...prevState,
+    serviceIds: prevState.serviceIds.filter(id => id !== serviceId),
+  }));
+};
+
 
 
 
@@ -165,9 +202,68 @@ const BarberDetails = () => {
     setWorkHours(hours);
   }, [availableHours]);
 
+  //formDataya gönderilecek olan kısım
+  useEffect(() => {
+    const hours = Array(12).fill().map((_, index) => availableHours[`t${index + 1}`] === 'T' ? 'T' : 'F');
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      availableHours: hours
+    }));
+  }, [availableHours]);
+
   const handleHourClick = (hour) => {
-    if (!availableHours[`t${hour}`] === 'T') {
-      console.log(`Selected hour: ${hour}`);
+    const updatedHours = workHours.map(hourData => {
+      if (hourData.hour === hour) {
+        return { ...hourData, disabled: true }; // Tıklanan saati disable yap
+      }
+      
+      return hourData;
+    });
+  
+    // Güncellenmiş saat durumlarını state içinde tut
+    setWorkHours(updatedHours);
+  
+    // FormData'yı güncelle, seçilen saati "T" olarak ayarla
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      availableHours: prevFormData.availableHours.map((value, index) => index + 9 === hour ? 'T' : value)
+    }));
+  };
+
+  const handleConfirmAndContinue = async () => {
+    try {
+        const userId=localStorage.getItem("id");
+       
+        const requestData = {
+        barberId: barberId,
+        date: formData.date,
+        serviceIds: formData.serviceIds,
+        userId: userId,
+        t1: formData.availableHours[0],
+        t2: formData.availableHours[1],
+        t3: formData.availableHours[2],
+        t4: formData.availableHours[3],
+        t5: formData.availableHours[4],
+        t6: formData.availableHours[5],
+        t7: formData.availableHours[6],
+        t8: formData.availableHours[7],
+        t9: formData.availableHours[8],
+        t10: formData.availableHours[9],
+        t11: formData.availableHours[10],
+        t12: formData.availableHours[11]
+      };
+  
+      await API.post("/appointments/createOrUpdate", requestData);
+  
+      alert("Randevu oluşturuldu!");
+  
+     
+      setCart([]);
+      setIsCartOpen(false);
+    } catch (error) {
+      console.error("Confirm and Continue Error: ", error.response ? error.response.data : error.message);
+      // Hata mesajını göster
+      alert("Randevu oluşturulurken bir hata oluştu.");
     }
   };
 
@@ -219,6 +315,9 @@ const BarberDetails = () => {
     return stars;
   };
 
+  useEffect(() => {
+    console.log("availableHours:", formData.availableHours);
+  }, [formData.availableHours]);
 
 
 
@@ -238,11 +337,11 @@ const BarberDetails = () => {
                 {barbers.rate}
               </button>
               <div>
-      <div className="flex items-center space-x-1">
-        <p className="text-gray-600">Puanınızı Verin:</p>
-        {renderStars()}
-      </div>
-    </div>
+                <div className="flex items-center space-x-1">
+                  <p className="text-gray-600">Puanınızı Verin:</p>
+                  {renderStars()}
+                </div>
+              </div>
               <button type="button" className="px-2.5 py-1.5 bg-gray-100 text-xs text-gray-800 rounded-md flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3 mr-1" fill="currentColor" viewBox="0 0 32 32">
                   <path d="M14.236 21.954h-3.6c-.91 0-1.65-.74-1.65-1.65v-7.201c0-.91.74-1.65 1.65-1.65h3.6a.75.75 0 0 1 .75.75v9.001a.75.75 0 0 1-.75.75zm-3.6-9.001a.15.15 0 0 0-.15.15v7.2a.15.15 0 0 0 .15.151h2.85v-7.501z" data-original="#000000" />
@@ -268,22 +367,62 @@ const BarberDetails = () => {
                 <p className="text-sm text-gray-400 mt-2">en iyi berberler hizmetinizde</p>
               </div>
               <div className="flex flex-wrap gap-4 ml-auto">
-                <button type="button" className="px-2.5 py-1.5 bg-pink-100 text-xs text-pink-600 rounded-md flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12px" fill="currentColor" className="mr-1" viewBox="0 0 64 64">
-                    <path d="M45.5 4A18.53 18.53 0 0 0 32 9.86 18.5 18.5 0 0 0 0 22.5C0 40.92 29.71 59 31 59.71a2 2 0 0 0 2.06 0C34.29 59 64 40.92 64 22.5A18.52 18.52 0 0 0 45.5 4ZM32 55.64C26.83 52.34 4 36.92 4 22.5a14.5 14.5 0 0 1 26.36-8.33 2 2 0 0 0 3.27 0A14.5 14.5 0 0 1 60 22.5c0 14.41-22.83 29.83-28 33.14Z" data-original="#000000"></path>
-                  </svg>
-                  100
-                </button>
-                <button type="button" className="px-2.5 py-1.5 bg-gray-100 text-xs text-gray-800 rounded-md flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12px" fill="currentColor" viewBox="0 0 512 512">
-                    <path d="M453.332 85.332c0 38.293-31.039 69.336-69.332 69.336s-69.332-31.043-69.332-69.336C314.668 47.043 345.707 16 384 16s69.332 31.043 69.332 69.332zm0 0" data-original="#000000" />
-                    <path d="M384 170.668c-47.063 0-85.332-38.273-85.332-85.336C298.668 38.273 336.938 0 384 0s85.332 38.273 85.332 85.336c0 47.063-38.27 85.336-85.332 85.336zM384 32c-29.418 0-53.332 23.938-53.332 53.332 0 29.398 23.914 53.336 53.332 53.336s53.332-23.938 53.332-53.336C437.332 55.938 413.418 32 384 32zm69.332 394.668C453.332 464.957 422.293 496 384 496s-69.332-31.043-69.332-69.332c0-38.293 31.039-69.336 69.332-69.336s69.332 31.043 69.332 69.336zm0 0" data-original="#000000" />
-                    <path d="M384 512c-47.063 0-85.332-38.273-85.332-85.332 0-47.063 38.27-85.336 85.332-85.336s85.332 38.273 85.332 85.336c0 47.059-38.27 85.332-85.332 85.332zm0-138.668c-29.418 0-53.332 23.938-53.332 53.336C330.668 456.063 354.582 480 384 480s53.332-23.937 53.332-53.332c0-29.398-23.914-53.336-53.332-53.336zm0 0" data-original="#000000" />
-                    <path d="M170.668 426.668C123.605 426.668 85.332 388.395 85.332 341.332c0-47.059 38.273-85.332 85.336-85.332s85.332 38.273 85.332 85.332c0 47.063-38.27 85.336-85.332 85.336zm0-138.668c-29.418 0-53.332 23.938-53.332 53.336 0 29.398 23.914 53.332 53.332 53.332s53.332-23.934 53.332-53.332c0-29.398-23.914-53.336-53.332-53.336zm0 0M512 341.332c0 75.191-61.141 136.332-136.332 136.332S239.336 416.523 239.336 341.332 300.477 205 375.668 205s136.332 61.141 136.332 136.332zm0 0" data-original="#000000" />
-                    <path d="M375.668 341.332c0 29.398-23.934 53.332-53.332 53.332s-53.332-23.934-53.332-53.332c0-29.402 23.934-53.336 53.332-53.336s53.332 23.934 53.332 53.336zm0 0" data-original="#000000" />
-                  </svg>
-                  200
-                </button>
+              <div className="ml-left mt-8">
+        <h3 className="text-sm font-bold text-gray-800">Sepet</h3>
+        <button
+             onClick={() => setIsCartOpen(!isCartOpen)} // Sepet düğmesine tıklandığında sepetin gösterilip gösterilmeyeceğini tersine çevir
+             className={`px-2.5 py-1.5 bg-${isCartOpen ? 'red' : 'gray'}-100 text-xs text-gray-800 rounded-md flex items-center`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12px" fill="currentColor" viewBox="0 0 512 512">
+              <path d="M453.332 85.332c0 38.293-31.039 69.336-69.332 69.336s-69.332-31.043-69.332-69.336C314.668 47.043 345.707 16 384 16s69.332 31.043 69.332 69.332zm0 0" data-original="#000000" />
+              <path d="M384 170.668c-47.063 0-85.332-38.273-85.332-85.336C298.668 38.273 336.938 0 384 0s85.332 38.273 85.332 85.336c0 47.063-38.27 85.336-85.332 85.336zM384 32c-29.418 0-53.332 23.938-53.332 53.332 0 29.398 23.914 53.336 53.332 53.336s53.332-23.938 53.332-53.336C437.332 55.938 413.418 32 384 32zm69.332 394.668C453.332 464.957 422.293 496 384 496s-69.332-31.043-69.332-69.332c0-38.293 31.039-69.336 69.332-69.336s69.332 31.043 69.332 69.336zm0 0" data-original="#000000" />
+              <path d="M384 512c-47.063 0-85.332-38.273-85.332-85.332 0-47.063 38.27-85.336 85.332-85.336s85.332 38.273 85.332 85.336c0 47.059-38.27 85.332-85.332 85.332zm0-138.668c-29.418 0-53.332 23.938-53.332 53.336C330.668 456.063 354.582 480 384 480s53.332-23.937 53.332-53.332c0-29.398-23.914-53.336-53.332-53.336zm0 0M512 341.332c0 75.191-61.141 136.332-136.332 136.332S239.336 416.523 239.336 341.332 300.477 205 375.668 205s136.332 61.141 136.332 136.332zm0 0" data-original="#000000" />
+              <path d="M375.668 341.332c0 29.398-23.934 53.332-53.332 53.332s-53.332-23.934-53.332-53.332c0-29.402 23.934-53.336 53.332-53.336s53.332 23.934 53.332 53.336zm0 0" data-original="#000000" />
+            </svg>
+            {cart.length > 0 && ` (${cart.length})`} {/* Sepete eklenen hizmet sayısını göster */}
+          </button>
+          {isCartOpen && (
+  <div className="mt-4">
+    <table className="border-collapse w-full">
+      <thead>
+        <tr className="border-b border-gray-200">
+          <th class="py-2 px-4 border border-gray-200">Hizmet Adı</th>
+          <th class="py-2 px-4 border border-gray-200">Fiyat (TL)</th>
+          <th class="py-2 px-4 border border-gray-200">Süre (DK)</th>
+         
+          <th className="py-2">İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        {cart.map((item, index) => (
+          <tr key={index} className="border-b border-gray-200">
+            <td class="py-2 px-4 border border-gray-200">{item.serviceName}</td>
+            <td class="py-2 px-4 border border-gray-200">{item.price} TL</td>
+            <td class="py-2 px-4 border border-gray-200">{item.time} DK</td>
+     
+            <td className="py-2">
+              <button 
+                type="button" 
+                className="w-12 h-12 border-2 bg-red-700 hover:border-gray-800 font-semibold text-sm rounded-md flex items-center justify-center shrink-0"
+                onClick={() => handleRemoveFromCart(item.id)}>Çıkar</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <button
+        type="button"
+        className="mt-4 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+        onClick={handleConfirmAndContinue}
+      >
+        Onayla ve Devam Et
+      </button>
+
+  </div>
+)}
+
+      </div>
+                
               </div>
             </div>
             <div>
@@ -293,7 +432,7 @@ const BarberDetails = () => {
                   <tr>
                     <th class="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Hizmet Adı</th>
                     <th class="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Zaman (Dakika)</th>
-                    <th class="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Fiyat</th>
+                    <th class="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Fiyat (TL)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -302,9 +441,21 @@ const BarberDetails = () => {
                       <td class="py-2 px-4 border border-gray-200">{service.serviceName}</td>
                       <td class="py-2 px-4 border border-gray-200">{service.price}</td>
                       <td class="py-2 px-4 border border-gray-200">{service.time}</td>
-                      <td><button type="button" class="w-12 h-12 border-2 bg-sky-200 hover:bg-sky-900 hover:border-gray-800 font-semibold text-sm rounded-md flex items-center justify-center shrink-0">Ekle</button></td>
-                      <td><button type="button" class="w-12 h-12 border-2 bg-red-700 hover:border-gray-800 font-semibold text-sm rounded-md flex items-center justify-center shrink-0">Çıkar</button></td>
+                      <td></td>
+                      <td>
+                   
+                      </td>
+                      
+                      <td>
+                      <button 
+                    type="button" 
+                    className="w-12 h-12 border-2 bg-sky-200 hover:bg-sky-900 hover:border-gray-800 font-semibold text-sm rounded-md flex items-center justify-center shrink-0"
+                    onClick={() => handleAddToCart(service)}>
+                    Ekle
+                  </button>
+                      </td>
                     </tr>
+
                   ))}
                 </tbody>
               </table>
