@@ -115,12 +115,7 @@ const CommentModal = ({ comments, onClose, barberId }) => {
                 </form>
               </div>
             </div>
-          </div>
-       
-
-
-
-
+          </div> 
         </div>
       </div>
     </div>

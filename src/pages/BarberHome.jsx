@@ -3,6 +3,107 @@ import { jwtDecode } from "jwt-decode";
 import API from '../api/axios';
 import React, { useEffect, useState } from 'react';
 
+
+
+const AddressPopup = ({ onClose,barberId }) => {
+  const [fullAddress, setFullAddress] = useState('');
+  const [districts, setDistricts] = useState([]);
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      try {
+        const response = await API.get('/address/districts');
+        setDistricts(response.data);
+      } catch (error) {
+        console.error('Error fetching districts:', error);
+      }
+    };
+
+    fetchDistricts();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const requestData = {
+        fullAddress,
+        barberId: barberId,
+        districtId: selectedDistrict,
+      };
+
+      await API.post('/addressesInfo/create', requestData);
+      alert('Adres başarıyla oluşturuldu.');
+      onClose();
+    } catch (error) {
+      console.error('Error creating address:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-gray-800 bg-opacity-50">
+      <div className="bg-white p-8 rounded-md">
+        <h2 className="text-xl font-bold mb-4">Adres Ekle</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="district">İlçe:</label>
+            <select
+              id="district"
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              required
+              className="border border-gray-300 rounded-md px-3 py-2 w-full"
+            >
+              <option value="">İlçe Seçiniz</option>
+              {districts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="fullAddress">Adres:</label>
+            <input
+              type="text"
+              id="fullAddress"
+              value={fullAddress}
+              onChange={(e) => setFullAddress(e.target.value)}
+              required
+              className="border border-gray-300 rounded-md px-3 py-2 w-full"
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md mr-2"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+              disabled={isLoading}
+            >
+              İptal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+
+
+
 const BarberHome = () => {
   const token = localStorage.getItem("token");
   const barberId = localStorage.getItem("id");
@@ -15,6 +116,7 @@ const BarberHome = () => {
   const [service, setService] = useState('');
   const [workHours, setWorkHours] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   
 
   useEffect(() => {
@@ -95,6 +197,14 @@ const BarberHome = () => {
     setIsPopupOpen(false);
   };
 
+  const openModal = () => {
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
   const handleInputChange = (e, setterFunction) => {
     setterFunction(e.target.value);
   };
@@ -145,11 +255,20 @@ const BarberHome = () => {
               </button>
             </div>
             {barbers.address === "Bilinmeyen Adres" ? (
+              <div>
         <p className="text-red-600 animate-blink mt-2">
           Adres eklemediniz, adres ekleyiniz
         </p>
+        <button type="button" onClick={openModal} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">
+      Adres Ekle
+    </button>
+    {showModal && <AddressPopup  onClose={closeModal} barberId={barberId} />}
+        </div>
+        
       ) : (
+        <div>
         <p className="text-gray-700 mt-2">{barbers.address}</p>
+        </div>
       )}
             
           </div>
