@@ -5,13 +5,13 @@ import 'react-calendar/dist/Calendar.css';
 import API from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash.debounce';
+import { format } from 'date-fns';
 
 
 
 
 export default function HeroSection() {
     const navigate = useNavigate();
-    const [selected, setSelected] = useState('TR');
     const [districts, setDistricts] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -53,17 +53,25 @@ export default function HeroSection() {
         }
     };
 
-    const handleSearchDate = async (selectedDate) => {
+
+    const handleSearchDate = async () => {
         try {
-          const dateResponse = await API.get('/appointments/date', {
-            params: { date: selectedDate.toISOString().split('T')[0] } 
-          });
-          console.log(dateResponse.data); 
+            if (!(selectedDate instanceof Date)) {
+                console.error('Selected date is not a valid Date object.');
+                return;
+            }
+           
+            const localDateString= format(selectedDate,'yyyy-MM-dd');
+
+            const dateResponse = await API.get('/appointments/date', {
+                params: { date: localDateString }
+            });
+            console.log(dateResponse.data)
+            navigate(`/barber/date/${localDateString}`, { state: { barbers: dateResponse.data } });
         } catch (error) {
-          console.error('Error fetching available times:', error);
+            console.error('Error fetching available times:', error);
         }
-        navigate(`/barber/date/${selectedDate}`);
-      };
+    };
 
     const debouncedSearch = debounce((term) => {
         handleSearch(term);
@@ -77,11 +85,7 @@ export default function HeroSection() {
         navigate(`/barber/${barberId}`);
     }
 
-    const phones = {
-        US: '+1',
-        GB: '+75',
-        TR: '+90'
-    };
+
     const handleDateChange = date => {
         setSelectedDate(date);
         console.log(selectedDate)
@@ -171,24 +175,24 @@ export default function HeroSection() {
                     </div>
                 )}
                 <div className='mx-auto bg-slate-200 absolute top-16 right-1'>
-  <div className="mx-auto max-w-md p-4 flex flex-col items-center">
-    <h1 className="text-xl font-bold mb-4">Randevu Tarihi Seçin</h1>
-    <Calendar
-      onChange={handleDateChange}
-      value={selectedDate}
-      className="rounded-lg shadow-md"
-    />
-    <div className="flex items-center mt-4">
-      <p className="text-black mr-4">Seçilen Tarih: {selectedDate.toLocaleDateString()}</p>
-      <button
-        onClick={handleSearchDate}
-        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
-      >
-        Ara
-      </button>
-    </div>
-  </div>
-</div>
+                    <div className="mx-auto max-w-md p-4 flex flex-col items-center">
+                        <h1 className="text-xl font-bold mb-4">Randevu Tarihi Seçin</h1>
+                        <Calendar
+                            onChange={handleDateChange}
+                            value={selectedDate}
+                            className="rounded-lg shadow-md"
+                        />
+                        <div className="flex items-center mt-4">
+                            <p className="text-black mr-4">Seçilen Tarih: {selectedDate.toLocaleDateString()}</p>
+                            <button
+                                onClick={handleSearchDate}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+                            >
+                                Ara
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>

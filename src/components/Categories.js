@@ -4,7 +4,7 @@ import API from "../api/axios";
 
 const Categories = () => {
   const [barbers, setBarbers] = useState([]);
-
+  const localDateString=new Date();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -49,8 +49,7 @@ const Categories = () => {
               <div className="mt-4 flex justify-between">
                 <div>
                   <h3 className="text-sm text-gray-700">
-                    <Link
-                      to={`/barber/${barber.barberId}`}
+                    <Link to={`/barber/${barber.barberId}`} state={{ date: localDateString }}
                       className="underline hover:text-gray-900 focus:text-gray-400"
                     >
                       {barber.barberName}

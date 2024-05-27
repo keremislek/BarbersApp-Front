@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import API from '../api/axios';
+import { format } from 'date-fns';
 
 const CommentModal = ({ comments, onClose, barberId }) => {
   const [newComment, setNewComment] = useState('');
@@ -138,11 +139,21 @@ const BarberDetails = () => {
   const [comments, setComments] = useState([]);
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  const location = useLocation();
+  const date = location.state?.date || '';
+  const localDateString = new Date(date);
+  
+  console.log("tarih bilgisi",localDateString)
+  if (!localDateString) {
+    localDateString = new Date();
+}
+
 
   const [formData, setFormData] = useState({
     serviceIds: [],
     availableHours: Array(12).fill().map((_, index) => availableHours[`t${index + 1}`] === 'T' ? 'T' : 'F'),
-    date: new Date(),
+    date: localDateString,
     userId: null
   });
 
@@ -172,13 +183,15 @@ const handleRemoveFromCart = (serviceId) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const formattedDate = localDateString.toISOString().split('T')[0];
+
         const barberResponse = await API.get(`/barbers/${barberId}`);
         setBarbers(barberResponse.data);
 
         const servicesResponse = await API.get(`/servicesInfo/barber/${barberId}`);
         setServicesInfo(servicesResponse.data);
 
-        const availableResponse = await API.get(`/appointments/available/${barberId}`);
+        const availableResponse = await API.get(`/appointments/available/${barberId}`,{params:{date:formattedDate}});
         setAvailableHours(availableResponse.data);
 
         const commentResponse = await API.get(`/comments/barber/${barberId}`)
@@ -260,6 +273,7 @@ const handleRemoveFromCart = (serviceId) => {
      
       setCart([]);
       setIsCartOpen(false);
+      window.location.reload();
     } catch (error) {
       console.error("Confirm and Continue Error: ", error.response ? error.response.data : error.message);
       // Hata mesajını göster

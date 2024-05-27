@@ -10,6 +10,8 @@ import Signup from "./pages/Signup";
 import BarberHome from "./pages/BarberHome";
 import Home from "./pages/Home";
 import BarberInfo from "./pages/BarberInfo";
+import BarberDateList from "./pages/BarberDateList";
+import CustomerAppointment from "./pages/CustomerAppointment";
 
 function App() {
  
@@ -29,6 +31,8 @@ function App() {
             <Route path="/signup" element={<Signup/>} />
             <Route path="/barberHome" element={<BarberHome/>}/>
             <Route path="/barberInfo" element={<BarberInfo/>}/>
+            <Route path="/barber/date/:localDateString" element={<BarberDateList/>} />
+            <Route path="/customerAppointments" element={<CustomerAppointment/>}/>
           </Routes>
         </div>
       </BrowserRouter>

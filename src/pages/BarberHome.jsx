@@ -15,6 +15,7 @@ const BarberHome = () => {
   const [service, setService] = useState('');
   const [workHours, setWorkHours] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  
 
   useEffect(() => {
     if (!token) {
@@ -29,15 +30,14 @@ const BarberHome = () => {
         const servicesResponse = await API.get(`/servicesInfo/barber/${barberId}`);
         setServicesInfo(servicesResponse.data);
 
+        const allServicesResponse = await API.get("/services");
+        setServices(allServicesResponse.data);
+
         const availableResponse = await API.get(`/appointments/available/${barberId}`);
         setAvailableHours(availableResponse.data);
 
-        const allServicesResponse = await API.get('/services');
-        const formattedServices = allServicesResponse.data.map(service => ({
-          value: service.id,
-          label: service.serviceName
-        }));
-        setServices(formattedServices);
+  
+
       } catch (error) {
         console.error("Fetch Data Error: ", error.response ? error.response.data : error.message);
       }
@@ -109,7 +109,7 @@ const BarberHome = () => {
               <select value={service} onChange={(e) => handleInputChange(e, setService)} className="border border-gray-300 rounded-md px-3 py-2 mb-4 w-full">
                 <option value="">Servis Seçiniz</option>
                 {services.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.id} value={option.id}>{option.serviceName}</option>
                 ))}
               </select>
               <input type="number" placeholder="Fiyat (TL)" value={price} onChange={(e) => handleInputChange(e, setPrice)} className="border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" />
@@ -144,7 +144,14 @@ const BarberHome = () => {
                 {barbers.commentSize}
               </button>
             </div>
-            <p className="text-gray-700 mt-2">{barbers.address}</p>
+            {barbers.address === "Bilinmeyen Adres" ? (
+        <p className="text-red-600 animate-blink mt-2">
+          Adres eklemediniz, adres ekleyiniz
+        </p>
+      ) : (
+        <p className="text-gray-700 mt-2">{barbers.address}</p>
+      )}
+            
           </div>
 
           <div className="ml-auto">

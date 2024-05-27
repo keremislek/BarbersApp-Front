@@ -21,7 +21,7 @@ export default function Home() {
     return (<div>
       <HeroSection/>
       <Categories/>
-      <Campaigns/>
+    
         <div className="container mx-auto grid gap-y-6">
           <Favorites/>
           <MobileApp/>
@@ -48,11 +48,11 @@ export default function Home() {
     <div>
     <HeroSection/>
     <Categories/>
-    <Campaigns/>
+   
       <div className="container mx-auto grid gap-y-6">
-        <Favorites/>
-        <MobileApp/>
-        <Cards/>
+        
+       
+        
       </div>
     </div>
     
