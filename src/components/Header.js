@@ -49,8 +49,6 @@ export default function Header() {
 
   const handleLogout = () => {
     logout(); 
-    // Çıkış yap
-    // Yönlendirme yap
     return <Navigate to="/" />; 
   };
 

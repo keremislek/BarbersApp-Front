@@ -2,6 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import API from '../api/axios';
 import React, { useEffect, useState } from 'react';
+import Map from './Map';
 
 
 
@@ -270,7 +271,9 @@ const BarberHome = () => {
         <p className="text-gray-700 mt-2">{barbers.address}</p>
         </div>
       )}
-            
+           <div className="flex container height:[50px]">
+          
+            </div> 
           </div>
 
           <div className="ml-auto">

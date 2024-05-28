@@ -202,11 +202,25 @@ const handleRemoveFromCart = (serviceId) => {
   const [workHours, setWorkHours] = useState([]);
 
   useEffect(() => {
-    const hours = Array(12).fill().map((_, index) => ({
-      hour: (9 + index) % 24,
-      disabled: availableHours[`t${index + 1}`] === 'T',
-      color: availableHours[`t${index + 1}`] === 'T' ? 'bg-red-500' : 'bg-blue-500 hover:bg-blue-700'
-    }));
+    const hours = Array(12).fill().map((_, index) => {
+      const key = `t${index + 1}`;
+      const value = availableHours[key];
+      let color;
+  
+      if (value === 'T') {
+        color = 'bg-red-500';
+      } else if (value === 'P') {
+        color = 'bg-yellow-500';
+      } else {
+        color = 'bg-blue-500 hover:bg-blue-900';
+      }
+  
+      return {
+        hour: (9 + index) % 24,
+        disabled: value === 'T',
+        color: color
+      };
+    });
     setWorkHours(hours);
   }, [availableHours]);
 
@@ -234,7 +248,10 @@ const handleRemoveFromCart = (serviceId) => {
     // FormData'yı güncelle, seçilen saati "T" olarak ayarla
     setFormData(prevFormData => ({
       ...prevFormData,
-      availableHours: prevFormData.availableHours.map((value, index) => index + 9 === hour ? 'T' : value)
+      availableHours: prevFormData.availableHours.map((value, index) =>{
+        const hourIndex = (9 + index) % 24;
+      return hourIndex === hour && value === 'F' ? 'B' : availableHours[`t${index + 1}`];
+      }) 
     }));
   };
 
@@ -263,7 +280,7 @@ const handleRemoveFromCart = (serviceId) => {
   
       await API.post("/appointments/createOrUpdate", requestData);
   
-      alert("Randevu oluşturuldu!");
+      alert("Randevu isteği berbere gönderildi");
   
      
       setCart([]);
