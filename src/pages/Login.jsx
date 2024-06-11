@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,15 +15,13 @@ const Login = () => {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Formun geleneksel olarak gönderilmesini engelle
+    e.preventDefault();
 
-    // Temel doğrulama
     if (!email || !password) {
       setError("Lütfen tüm alanları doldurun.");
       return;
     }
 
-    // Email doğrulaması (basit desen)
     const emailPattern = /\S+@\S+\.\S+/;
     if (!emailPattern.test(email)) {
       setError("Geçersiz email formatı.");
@@ -32,27 +30,31 @@ const Login = () => {
 
     console.log("Giriş yapılıyor", email, password);
 
-    const success = await login(email, password);
-    if (success) {
-      const token = localStorage.getItem("token");
+    try {
+      const success = await login(email, password);
+      if (success) {
+        const token = localStorage.getItem("token");
 
-      if (!token) {
-        console.error("Token bulunamadı");
-        return;
-      }
-      const tokenString = token.toString();
-      const decoded = jwtDecode(tokenString);
-      const firstRole = decoded.role[0].authority;
-      const decodedEmail = decoded.sub;
+        if (!token) {
+          console.error("Token bulunamadı");
+          return;
+        }
 
+        const decoded = jwtDecode(token);
+        const firstRole = decoded.role[0].authority;
+        const decodedEmail = decoded.sub;
 
-      if (firstRole === "Customer") {
-        navigate("/");
+        if (firstRole === "Customer") {
+          navigate("/");
+        } else {
+          navigate("/barberHome", { state: { email: decodedEmail } });
+        }
       } else {
-        navigate("/barberHome", { state: { email: decodedEmail } });
+        setError("Geçersiz email veya şifre.");
       }
-    } else {
-      setError("Geçersiz email veya şifre.");
+    } catch (err) {
+      console.error("Login failed", err);
+      setError("Giriş başarısız oldu. Lütfen tekrar deneyin.");
     }
   };
 
@@ -62,6 +64,11 @@ const Login = () => {
     <div className="flex justify-center items-center h-screen">
       <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-8 space-y-6">
         <h1 className="text-3xl font-bold text-center">Giriş Yap</h1>
+        {error && (
+          <div className="text-red-500 text-center">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="flex flex-col">
             <label htmlFor="email" className="text-lg text-gray-600 mb-1">
@@ -79,41 +86,36 @@ const Login = () => {
           </div>
           <div className="flex flex-col">
             <label htmlFor="password" className="text-lg text-gray-600 mb-1">
-              Password
+              Şifre
             </label>
             <input
               id="password"
               type="password"
-              placeholder="Password"
+              placeholder="Şifre"
               className="border border-gray-300 rounded-lg py-2 px-4"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <a
-            href="#"
-            onClick={handleSignupClick} // Signup sayfasına yönlendirme
-            className="text-blue-400 hover:text-blue-600 text-sm text-center"
-          >
-            Hesap Oluştur
-          </a>
-          <button
-            type="submit"
-            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
-          >
-            GİRİŞ YAP
-          </button>
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              className="bg-gradient-to-r items-center text-center from-blue-500 to-purple-500 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              GİRİŞ YAP
+            </button>
+          </div>
         </form>
         <div className="text-sm text-gray-600 text-center">
           Hesabın yok mu?{" "}
-          <a href="#" className="text-blue-400 hover:text-blue-600">
+          <a
+            href="#"
+            onClick={handleSignupClick}
+            className="text-blue-400 hover:text-blue-600"
+          >
             Kaydol
           </a>
-        </div>
-        <div className="flex items-center justify-center mt-5">
-          {/* Third Party Authentication Options */}
-          {/* Dışarıdan giriş seçenekleri */}
         </div>
       </div>
     </div>

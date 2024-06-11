@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import API from '../api/axios';
 import React, { useEffect, useState } from 'react';
-import Map from './Map';
+
 
 
 
@@ -103,8 +103,6 @@ const AddressPopup = ({ onClose,barberId }) => {
 };
 
 
-
-
 const BarberHome = () => {
   const token = localStorage.getItem("token");
   const barberId = localStorage.getItem("id");
@@ -118,7 +116,7 @@ const BarberHome = () => {
   const [workHours, setWorkHours] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  
+  const [serviceInfoId, setServiceInfoId] = useState(null); // Track the current serviceInfo being edited
 
   useEffect(() => {
     if (!token) {
@@ -138,9 +136,6 @@ const BarberHome = () => {
 
         const availableResponse = await API.get(`/appointments/available/${barberId}`);
         setAvailableHours(availableResponse.data);
-
-  
-
       } catch (error) {
         console.error("Fetch Data Error: ", error.response ? error.response.data : error.message);
       }
@@ -163,18 +158,52 @@ const BarberHome = () => {
     }
   };
 
+  const handleEdit = (service) => {
+    setServiceInfoId(service.id); // Set the correct serviceInfoId
+    setService(service.serviceId);
+    setTime(service.time);
+    setPrice(service.price);
+    setIsPopupOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await API.delete(`/servicesInfo/${id}`);
+      alert("Hizmet Başarıyla Silindi");
+      setServicesInfo(servicesInfo.filter((service) => service.id !== id));
+    } catch (error) {
+      console.error('Error deleting service info: ', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await API.post('/servicesInfo/create', {
-        time,
-        price,
-        serviceId: service,
-        barberId
-      });
-      alert("Hizmet Başarıyla Eklendi");
+      if (serviceInfoId) {
+        await API.put('/servicesInfo/update', {
+          id: serviceInfoId,
+          time,
+          price,
+          serviceId: service,
+          barberId
+        });
+        alert("Hizmet Başarıyla Güncellendi");
+      } else {
+        await API.post('/servicesInfo/create', {
+          time,
+          price,
+          serviceId: service,
+          barberId
+        });
+        alert("Hizmet Başarıyla Eklendi");
+      }
+      setIsPopupOpen(false);
+      setServiceInfoId(null);
+      setService('');
+      setTime('');
+      setPrice('');
     } catch (error) {
-      console.error('Error creating service info: ', error);
+      console.error('Error creating/updating service info: ', error);
     }
   };
 
@@ -191,11 +220,16 @@ const BarberHome = () => {
   }
 
   const openPopup = () => {
+    setServiceInfoId(null);
+    setService('');
+    setTime('');
+    setPrice('');
     setIsPopupOpen(true);
   };
 
   const closePopup = () => {
     setIsPopupOpen(false);
+    setServiceInfoId(null);
   };
 
   const openModal = () => {
@@ -211,23 +245,25 @@ const BarberHome = () => {
   };
 
   return (
-    <div className="font-sans">
+    <div className="font-sans bg-gray-100 min-h-screen">
       {isPopupOpen && (
         <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-8 rounded-md">
-            <h2 className="text-xl font-bold mb-4">Hizmet Ekle</h2>
+          <div className="bg-white p-8 rounded-md shadow-lg">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">{serviceInfoId ? 'Hizmeti Güncelle' : 'Hizmet Ekle'}</h2>
             <form onSubmit={handleSubmit}>
-              <select value={service} onChange={(e) => handleInputChange(e, setService)} className="border border-gray-300 rounded-md px-3 py-2 mb-4 w-full">
-                <option value="">Servis Seçiniz</option>
-                {services.map(option => (
-                  <option key={option.id} value={option.id}>{option.serviceName}</option>
-                ))}
-              </select>
+              {!serviceInfoId && (
+                <select value={service} onChange={(e) => handleInputChange(e, setService)} className="border border-gray-300 rounded-md px-3 py-2 mb-4 w-full">
+                  <option value="">Servis Seçiniz</option>
+                  {services.map(option => (
+                    <option key={option.id} value={option.id}>{option.serviceName}</option>
+                  ))}
+                </select>
+              )}
               <input type="number" placeholder="Fiyat (TL)" value={price} onChange={(e) => handleInputChange(e, setPrice)} className="border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" />
               <input type="number" placeholder="Zaman (Dakika)" value={time} onChange={(e) => handleInputChange(e, setTime)} className="border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" />
               <div className="flex justify-end">
-                <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md mr-2">Kaydet</button>
-                <button type="button" onClick={closePopup} className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded-md">İptal</button>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mr-2 shadow">{serviceInfoId ? 'Güncelle' : 'Kaydet'}</button>
+                <button type="button" onClick={closePopup} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md shadow">İptal</button>
               </div>
             </form>
           </div>
@@ -240,13 +276,13 @@ const BarberHome = () => {
             <h2 className="text-left font-bold text-gray-800 mt-4">{barbers.barberName}</h2>
             <img src={barbers.photoUrl} width="200" height="200" alt="Product" className="lg:w-10/12 w-full h-full rounded-xl object-cover object-top mx-auto" />
             <div className="flex items-center justify-center mt-4">
-              <button type="button" className="px-4 py-2 bg-pink-500 text-white rounded-md flex items-center">
+              <button type="button" className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-md flex items-center shadow">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg">
                   <path d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
                 </svg>
-                {barbers.rate}
+                {barbers.rate ? barbers.rate.toFixed(1) : 'N/A'}
               </button>
-              <button type="button" className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center ml-4">
+              <button type="button" className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md flex items-center ml-4 shadow">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 32 32">
                   <path d="M14.236 21.954h-3.6c-.91 0-1.65-.74-1.65-1.65v-7.201c0-.91.74-1.65 1.65-1.65h3.6a.75.75 0 0 1 .75.75v9.001a.75.75 0 0 1-.75.75zm-3.6-9.001a.15.15 0 0 0-.15.15v7.2a.15.15 0 0 0 .15.151h2.85v-7.501z" data-original="#000000" />
                   <path d="M20.52 21.954h-6.284a.75.75 0 0 1-.75-.75v-9.001c0-.257.132-.495.348-.633.017-.011 1.717-1.118 2.037-3.25.18-1.184 1.118-2.089 2.28-2.201a2.557 2.557 0 0 1 2.17.868c.489.56.71 1.305.609 2.042a9.468 9.468 0 0 1-.678 2.424h.943a2.56 2.56 0 0 1 1.918.862c.483.547.708 1.279.617 2.006l-.675 5.401a2.565 2.565 0 0 1-2.535 2.232zm-5.534-1.5h5.533a1.06 1.06 0 0 0 1.048-.922l.675-5.397a1.046 1.046 0 0 0-1.047-1.182h-2.16a.751.751 0 0 1-.648-1.13 8.147 8.147 0 0 0 1.057-3 1.059 1.059 0 0 0-.254-.852 1.057 1.057 0 0 0-.795-.365c-.577.052-.964.435-1.04.938-.326 2.163-1.71 3.507-2.369 4.036v7.874z" data-original="#000000" />
@@ -255,50 +291,44 @@ const BarberHome = () => {
                 {barbers.commentSize}
               </button>
             </div>
-            {barbers.address === "Bilinmeyen Adres" ? (
+            {barbers.address === "Bilinmeyen Adres / Bilinmeyen İlçe" ? (
               <div>
-        <p className="text-red-600 animate-blink mt-2">
-          Adres eklemediniz, adres ekleyiniz
-        </p>
-        <button type="button" onClick={openModal} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">
-      Adres Ekle
-    </button>
-    {showModal && <AddressPopup  onClose={closeModal} barberId={barberId} />}
-        </div>
-        
-      ) : (
-        <div>
-        <p className="text-gray-700 mt-2">{barbers.address}</p>
-        </div>
-      )}
-           <div className="flex container height:[50px]">
-          
-            </div> 
+                <p className="text-red-600 animate-blink mt-2">Adres eklemediniz, adres ekleyiniz</p>
+                <button type="button" onClick={openModal} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2 shadow">Adres Ekle</button>
+                {showModal && <AddressPopup onClose={closeModal} barberId={barberId} />}
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-700 mt-2">{barbers.address}</p>
+              </div>
+            )}
+            <div className="flex container height:[50px]"></div>
           </div>
 
           <div className="ml-auto">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-800">Berber Ana Sayfa</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Berber Ana Sayfa</h2>
                 <p className="text-sm text-gray-400">Bilgilerinizi, hizmetlerinizi görüntüleyebilir ve değiştirebilirsiniz</p>
               </div>
               <div>
-                <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow">
                   <Link to="/barberInfo">Bilgilerimi Güncelle</Link>
                 </button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Hizmetlerim </h3>
+              <h3 className="text-xl font-bold text-gray-800">Hizmetlerim</h3>
               <table className="w-full mt-4">
                 <thead>
                   <tr>
                     <th className="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Hizmet Adı</th>
                     <th className="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Fiyat</th>
                     <th className="py-2 px-4 bg-gray-100 text-gray-800 font-semibold">Zaman (Dakika)</th>
-
-                    <th><button onClick={openPopup} className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-md">Hizmet Ekle</button></th>
+                    <th>
+                      <button onClick={openPopup} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow">Hizmet Ekle</button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -308,8 +338,8 @@ const BarberHome = () => {
                       <td className="py-2 px-4 border border-gray-200">{service.price}</td>
                       <td className="py-2 px-4 border border-gray-200">{service.time}</td>
                       <td>
-                        <button type="button" className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 rounded-md mr-2">Güncelle</button>
-                        <button type="button" className="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-md">Sil</button>
+                        <button type="button" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md mr-2 shadow" onClick={() => handleEdit(service)}>Güncelle</button>
+                        <button type="button" className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md shadow" onClick={() => handleDelete(service.id)}>Sil</button>
                       </td>
                     </tr>
                   ))}
@@ -318,7 +348,7 @@ const BarberHome = () => {
             </div>
 
             <div className="mt-8">
-              <h3 className="text-lg font-bold text-gray-800">Çalışma Saatleri</h3>
+              <h3 className="text-xl font-bold text-gray-800">Çalışma Saatleri</h3>
               <div className="flex flex-wrap gap-4 mt-4">
                 {workHours.map((hourData, index) => (
                   <button
@@ -341,3 +371,6 @@ const BarberHome = () => {
 }
 
 export default BarberHome;
+
+
+

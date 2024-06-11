@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import API from '../api/axios';
-
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -13,28 +13,30 @@ export const AuthProvider = ({ children }) => {
     id: localStorage.getItem('id'),
   });
 
+  const navigate = useNavigate();
+
   const login = async (email, password) => {
     try {
-        const response = await API.post('api/v1/auth/authenticate', {
-          email,
-          password,
+      const response = await API.post('api/v1/auth/authenticate', {
+        email,
+        password,
+      });
+      const { token } = response.data;
+      const { id } = response.data;
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('id', id);
+        setAuthState({
+          token,
+          isAuthenticated: true,
+          id,
         });
-        const { token } = response.data;
-        const { id } = response.data;
-        if (token) {
-          localStorage.setItem('token', token);
-          localStorage.setItem('id', id);
-          setAuthState({
-            token,
-            isAuthenticated: true,
-            id
-          });
-          return true;
-        }
-      } catch (error) {
-        console.error('Login failed:', error.response ? error.response.data : error.message);
-        return false;
+        return true;
       }
+    } catch (error) {
+      console.error('Login failed:', error.response ? error.response.data : error.message);
+      return false;
+    }
   };
 
   const logout = () => {
@@ -43,8 +45,9 @@ export const AuthProvider = ({ children }) => {
     setAuthState({
       token: null,
       isAuthenticated: false,
-      id:null,
+      id: null,
     });
+    navigate("/");
     return true;
   };
 

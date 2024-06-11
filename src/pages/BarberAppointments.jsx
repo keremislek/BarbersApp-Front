@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from '../api/axios';
 
-
 const BarberAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,18 +86,23 @@ const BarberAppointments = () => {
 
   const formatDate = (date) => {
     if (typeof date === 'string') {
-      return date.split('-').reverse().join('-');
+      const [year, month, day] = date.split('-');
+      return `${day}/${month}/${year}`;
     } else {
       return date;
     }
   };
 
+  const trimServices = (services) => {
+    if (services.endsWith(' -')) {
+      return services.slice(0, -1);
+    }
+    return services;
+  };
+
   const handleClosePopup = () => {
     setShowPopup(false);
   };
-
-  if (loading) return <p>Yükleniyor...</p>;
-  if (error && error.response && error.response.status !== 403) return <p>Hata: {error.message}</p>;
 
   return (
     <div className="container mx-auto p-4">
@@ -141,10 +145,10 @@ const BarberAppointments = () => {
             {appointments.map(appointment => (
               <tr key={appointment.appId} className="hover:bg-gray-100">
                 <td className="px-4 py-2 border-b">{appointment.appId}</td>
-                <td className="px-4 py-2 border-b">{formatDate(appointment.date)}</td>
+                <td className="px-4 py-2 border-b">16/05/2024</td>
                 <td className="px-4 py-2 border-b">{getTimeText(appointment.time)}</td>
                 <td className="px-4 py-2 border-b">{getStatusText(appointment.status)}</td>
-                <td className="px-4 py-2 border-b">{appointment.services}</td>
+                <td className="px-4 py-2 border-b">{trimServices(appointment.services)}</td>
                 <td className="px-4 py-2 border-b">
                   {appointment.status === 'PENDING' && (
                     <div className="space-x-2">

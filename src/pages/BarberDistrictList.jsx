@@ -1,16 +1,28 @@
 import { useEffect, useState } from "react";
 import API from "../api/axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
-export default function BarberDistrictList() {
+const BarberDistrictList = () => {
   const [barbers, setBarbers] = useState([]);
   const { districtId } = useParams();
+  const location = useLocation();
+  const date = location.state?.date || '';
+  const localDateString = date ? new Date(date) : new Date();
+
+  
+  console.log("tarih bilgisi",localDateString)
+
+  if (!localDateString) {
+
+    localDateString = new Date();
+
+}
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await API.get(`appointments/${districtId}`);
-        console.log("API response data:", response.data); // Log the full response data
+        console.log("API response data:", response.data); // API yanıtını loglayın
         setBarbers(response.data);
       } catch (error) {
         console.error('Fetch Data Error:', error.response ? error.response.data : error.message);
@@ -38,27 +50,26 @@ export default function BarberDistrictList() {
         <h2 className="text-2xl font-bold tracking-tight text-gray-900">Barbers</h2>
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
           {barbers.map((barber) => (
-            <div key={barber.barberId} className="group relative">
-              <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
-                <Link to={`/barber/${barber.id}`  } className="underline hover:text-gray-900 focus:text-gray-400">
-                <img
-                  src={barber.photoUrl}
-                  className="h-full w-full object-cover object-center lg:h-full lg:w-full"
-                  alt={`Photo of ${barber.barberName}`}
-                />
-                </Link>
-              </div>
+            <div key={barber.id} className="group relative">
+              <Link to={`/barber/${barber.id}`} state={{ date: localDateString }} className="group">
+                <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
+                  <img
+                    src={barber.photoUrl}
+                    className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                    alt={`Photo of ${barber.barberName}`}
+                  />
+                </div>
+              </Link>
               <div className="mt-4 flex justify-between">
                 <div>
                   <h3 className="text-sm text-gray-700">
-                    <Link
-                      to={`/barber/${barber.id}`}
+                    <Link to={`/barber/${barber.id}`} state={{ date: localDateString }}
                       className="underline hover:text-gray-900 focus:text-gray-400"
                     >
                       {barber.barberName}
                     </Link>
                   </h3>
-                  <p className="mt-1 text-sm text-gray-900">{barber.address}</p>
+                  <p className="mt-1 text-sm text-gray-900">{barber.barberAddress}</p>
                   <p className="mt-1 text-sm text-gray-500">
                     {renderStars(Math.round(barber.rate))}
                     <span style={{ marginLeft: "8px" }}>Yorumlar</span>
@@ -73,4 +84,6 @@ export default function BarberDistrictList() {
       </div>
     </div>
   );
-}
+};
+
+export default BarberDistrictList;

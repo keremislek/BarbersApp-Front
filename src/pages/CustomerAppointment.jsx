@@ -96,7 +96,7 @@ const CustomerAppointment = () => {
                 <p className="text-gray-600"><span className="font-semibold">Kullanıcı Adı:</span> {appointment.customerName}</p>
                 <p className="text-gray-600"><span className="font-semibold">Hizmetler:</span> {appointment.services}</p>
                 <p className="text-gray-600"><span className="font-semibold">Durum:</span> {getStatusText(appointment.status)}</p>
-                <p className="text-gray-600"><span className="font-semibold">Tarih:</span> {appointment.date}</p>
+                <p className="text-gray-600"><span className="font-semibold">Tarih:</span> 16/05/2024</p>
                 <p className="text-gray-600"><span className="font-semibold">Saat:</span> {getTimeText(appointment.time)}</p>
               </li>
             ))}

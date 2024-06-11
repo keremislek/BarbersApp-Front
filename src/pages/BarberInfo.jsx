@@ -1,12 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import API from '../api/axios';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { initializeApp } from 'firebase/app';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCgwj1IRROxAt8DXC3f5T-5bKwyLl2p1YM",
+  authDomain: "barber-app-169e6.firebaseapp.com",
+  projectId: "barber-app-169e6",
+  storageBucket: "barber-app-169e6.appspot.com",
+  messagingSenderId: "214947272707",
+  appId: "1:214947272707:web:9b2abe12b7921631fcd636",
+  measurementId: "G-D7RKGKKMHF"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 export default function BarberInfo() {
   const [barbers, setBarbers] = useState({});
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [districtId, setDistrictId] = useState('');
   const [districts, setDistricts] = useState([]);
@@ -14,9 +29,15 @@ export default function BarberInfo() {
   const [errorMessageEmail, setErrorMessageEmail] = useState('');
   const [successMessageAddress, setSuccessMessageAddress] = useState('');
   const [errorMessageAddress, setErrorMessageAddress] = useState('');
+  const [successMessagePhoto, setSuccessMessagePhoto] = useState('');
+  const [errorMessagePhoto, setErrorMessagePhoto] = useState('');
+  const [barberName, setBarberName] = useState('');
+  const [successMessageName, setSuccessMessageName] = useState('');
+  const [errorMessageName, setErrorMessageName] = useState('');
 
   const barberId = localStorage.getItem('id');
   const token = localStorage.getItem('token');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!token) {
@@ -30,6 +51,7 @@ export default function BarberInfo() {
         setBarbers(barberResponse.data);
         const districtResponse = await API.get('/address/districts');
         setDistricts(districtResponse.data);
+        setBarberName(barberResponse.data.barberName); // İsim alanını doldur
       } catch (error) {
         console.error(
           'Fetch Data Error: ',
@@ -41,6 +63,32 @@ export default function BarberInfo() {
     fetchData();
   }, [token, barberId]);
 
+  const handlePhotoClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handlePhotoChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const fileRef = ref(storage, `barber_photos/${file.name}`);
+      await uploadBytes(fileRef, file); // Fotoğrafı Firebase Depolama'ya yükle
+      const photoURL = await getDownloadURL(fileRef); // Yüklenen fotoğrafın URL'sini al
+      console.log("Photo URL:", photoURL);
+      
+      // Yeni URL'yi veritabanına kaydet
+      await API.put(`/barbers/${barberId}/photo`, photoURL);
+      setBarbers(prev => ({ ...prev, photoUrl: photoURL }));
+      setSuccessMessagePhoto('Fotoğraf başarıyla güncellendi!');
+      setErrorMessagePhoto('');
+    } catch (error) {
+      console.error('Fotoğraf güncelleme hatası:', error);
+      setErrorMessagePhoto('Fotoğraf güncellenirken bir hata oluştu');
+      setSuccessMessagePhoto('');
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -51,10 +99,10 @@ export default function BarberInfo() {
 
     try {
       await API.put(`/barbers/${barberId}`, updateData);
-      setSuccessMessageEmail('Email and password updated successfully!');
+      setSuccessMessageEmail('Email ve şifre başarıyla güncellendi!');
       setErrorMessageEmail('');
     } catch (error) {
-      setErrorMessageEmail('Failed to update email and password.');
+      setErrorMessageEmail('Beklenmeyen bir hata oluştu');
       setSuccessMessageEmail('');
     }
   };
@@ -68,11 +116,24 @@ export default function BarberInfo() {
     };
     try {
       await API.put(`/addressesInfo/update/${barberId}`, updateAddressData);
-      setSuccessMessageAddress('Address updated successfully!');
+      setSuccessMessageAddress('Adres başarıyla güncellendi!');
       setErrorMessageAddress('');
     } catch (error) {
-      setErrorMessageAddress('Failed to update address.');
+      setErrorMessageAddress('Beklenmeyen bir hata oluştu');
       setSuccessMessageAddress('');
+    }
+  };
+
+  const handleSubmitName = async (event) => {
+    event.preventDefault();
+
+    try {
+      await API.put(`/barbers/${barberId}/name`, barberName);
+      setSuccessMessageName('İsim başarıyla güncellendi!');
+      setErrorMessageName('');
+    } catch (error) {
+      setErrorMessageName('Beklenmeyen bir hata oluştu');
+      setSuccessMessageName('');
     }
   };
 
@@ -90,28 +151,52 @@ export default function BarberInfo() {
             whileHover={{ scale: 1.1 }}
             src={barbers.photoUrl}
             alt={barbers.barberName}
-            className="w-32 h-32 rounded-full object-cover shadow-lg"
+            className="w-32 h-32 rounded-full object-cover shadow-lg cursor-pointer"
+            onClick={handlePhotoClick}
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handlePhotoChange}
+            accept="image/*"
           />
           <div className="mt-4 text-center">
             <p className="text-2xl font-semibold text-gray-800">{barbers.barberName}</p>
             <div className="flex items-center justify-center mt-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-yellow-500 mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 1a.75.75 0 0 1 .673.418l1.891 3.815 4.226.616a.75.75 0 0 1 .416 1.279l-3.059 2.981.722 4.211a.75.75 0 0 1-1.088.791L10 14.697l-3.785 1.986a.75.75 0 0 1-1.088-.79l.722-4.211-3.059-2.981a.75.75 0 0 1 .416-1.279l4.226-.616 1.891-3.815A.75.75 0 0 1 10 1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p className="text-lg font-medium">{barbers.rate}</p>
-              <p className="text-gray-500 ml-2">({barbers.commentSize} yorum)</p>
+             
             </div>
             <p className="text-gray-500 mt-2">Adres: {barbers.address}</p>
           </div>
+        </div>
+        {successMessagePhoto && <p className="mt-4 text-green-600 text-center">{successMessagePhoto}</p>}
+        {errorMessagePhoto && <p className="mt-4 text-red-600 text-center">{errorMessagePhoto}</p>}
+        
+        <div className="mt-8 w-full">
+          <h2 className="text-xl font-bold mb-4 text-center">İsim Güncelle</h2>
+          <form onSubmit={handleSubmitName} className="space-y-4">
+            <div>
+              <label htmlFor="barberName" className="block text-sm font-medium text-gray-700">İsim</label>
+              <input
+                type="text"
+                id="barberName"
+                value={barberName}
+                onChange={(e) => setBarberName(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                required
+              />
+            </div>
+            <div>
+              <button
+                type="submit"
+                className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Güncelle
+              </button>
+            </div>
+          </form>
+          {successMessageName && <p className="mt-4 text-green-600 text-center">{successMessageName}</p>}
+          {errorMessageName && <p className="mt-4 text-red-600 text-center">{errorMessageName}</p>}
         </div>
 
         <div className="mt-8 w-full">
@@ -144,7 +229,7 @@ export default function BarberInfo() {
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Update
+                Güncelle
               </button>
             </div>
           </form>
@@ -175,7 +260,7 @@ export default function BarberInfo() {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 required
               >
-                <option value="" disabled selected>İlçe seçiniz</option>
+                <option value="" disabled>İlçe seçiniz</option>
                 {districts.map(district => (
                   <option key={district.id} value={district.id}>{district.name}</option>
                 ))}
@@ -186,7 +271,7 @@ export default function BarberInfo() {
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Update
+                Güncelle
               </button>
             </div>
           </form>

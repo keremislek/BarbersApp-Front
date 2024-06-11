@@ -3,10 +3,8 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import HeroSection from '../components/HeroSection';
 import Categories from '../components/Categories';
-import Campaigns from '../components/Campaigns';
-import Favorites from '../components/Favorites';
-import MobileApp from '../components/MobileApp';
-import Cards from '../components/Cards';
+
+
 import { useAuth } from '../context/AuthContext';
 
 
@@ -23,9 +21,9 @@ export default function Home() {
       <Categories/>
     
         <div className="container mx-auto grid gap-y-6">
-          <Favorites/>
-          <MobileApp/>
-          <Cards/>
+   
+        
+    
         </div>
       </div>);
   }
